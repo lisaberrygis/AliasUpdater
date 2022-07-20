@@ -4,6 +4,7 @@ This script uses a lookup table to update alias names on a hosted feature servic
 The script updates the alias names in two places:
   - The REST endpoint
   - The layer's pop-up JSON
+  
 The pop-up configuration will not be altered with this implementation
 The script also allows you to update the long description and field type for any field
 
