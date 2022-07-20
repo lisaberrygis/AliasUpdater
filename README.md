@@ -35,4 +35,4 @@ The second column should be the intended alias names for each field.
                measurement, currency, uniqueIdentifier, phoneNumber, emailAddress,
                orderedOrRanked, binary, locationOrPlaceName, coordinate, dateAndTime
 
- portalName can be left as-is if you are working in ArcGIS Online.
+ **portalName** can be left as-is if you are working in ArcGIS Online.
