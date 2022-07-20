@@ -15,7 +15,7 @@ You must have ArcGIS Pro installed on your computer in order to run this script
 Python version: 3.6. Make sure your interpreter is calling to the arcgispro-py3 python.exe
 
 # Excel input:
-See the included Test.xlsx to see how the input excel should be structured
+See the included **Test.xlsx** to see how the input excel should be structured
 
 # Comments about python inputs:
 **username and password** are your ArcGIS Online organizational credentials
