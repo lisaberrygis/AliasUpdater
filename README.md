@@ -1,4 +1,4 @@
-# AliasUpdater
+# Alias Updater
 Update Hosted Feature Services in ArcGIS Online using this short Python 3 script
 This script uses a lookup table to update alias names on a hosted feature service.
 The script updates the alias names in two places:
@@ -14,10 +14,10 @@ This script allows for multiple REST layers to be updated. Specify the REST laye
 You must have ArcGIS Pro installed on your computer in order to run this script
 Python version: 3.6. Make sure your interpreter is calling to the arcgispro-py3 python.exe
 
-# Excel input
+# Excel input:
 See the included Test.xlsx to see how the input excel should be structured
 
-# Comments about inputs:
+# Comments about python inputs:
 username and password are your ArcGIS Online organizational credentials
 
 layerID is the ID to a hosted feature service 
