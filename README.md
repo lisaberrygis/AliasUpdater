@@ -5,8 +5,8 @@ The script updates the alias names in two places:
   - The REST endpoint
   - The layer's pop-up JSON
   
-The pop-up configuration will not be altered with this implementation
-The script also allows you to update the long description and field type for any field
+The pop-up configuration will not be altered with this implementation.
+The script also allows you to update the long description and field type for any field.
 
 The script will use the input excel document and update any fields it finds that matches from the excel document
 
