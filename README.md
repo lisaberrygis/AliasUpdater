@@ -21,7 +21,7 @@ See the included **Test.xlsx** to see how the input excel should be structured
 # Comments about python inputs:
 **username and password** are your ArcGIS Online organizational credentials
 
-**layerID** is the ID to a hosted feature service 
+**layerID** is the ID to a hosted feature service. [Visit this blog](https://community.esri.com/t5/arcgis-online-blog/where-can-i-find-the-item-id-for-an-arcgis-online/ba-p/890284) if you need help looking for this. 
 
 **restLayerCount** is the count of layers in the service. All layers will use
               the same field/alias lookup, but only matching fields will be updated.
