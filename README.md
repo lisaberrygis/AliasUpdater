@@ -1,4 +1,4 @@
-# Alias Updater
+# Hosted Feature Service Alias Updater
 Update Hosted Feature Services in ArcGIS Online using this short Python 3 script
 This script uses a lookup table to update alias names on a hosted feature service.
 The script updates the alias names in two places:
