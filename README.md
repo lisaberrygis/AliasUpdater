@@ -34,7 +34,7 @@ The first column should be the field names as they are in the service.
 
 The second column should be the intended alias names for each field.
 
-*optional* The third column should be the intended description for each field.
+*optional* The third column should be the intended long description for each field. This can be multiple sentences long and helps describe the field in detail.
 
 *optional* The fourth column can include the field type. This must be formatted
           to match the backend JSON. 
