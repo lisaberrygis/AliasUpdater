@@ -3,7 +3,8 @@ Update Hosted Feature Services in ArcGIS Online using this short Python 3 script
 This script uses a lookup table to update alias names on a hosted feature service.
 The script updates the alias names in two places:
   - The REST endpoint
-  - The layer's pop-up JSON
+  - The layer's pop-up JSON in the fieldInfos section 
+  - *If saved in the new Map Viewer, also edits the popupElement fieldInfos
   
 The pop-up configuration will not be altered with this implementation.
 The script also allows you to update the long description and field type for any field.
@@ -35,5 +36,8 @@ The second column should be the intended alias names for each field.
            Ex:  nameOrTitle, description, typeOrCategory, countOrAmount, percentageOrRatio
                measurement, currency, uniqueIdentifier, phoneNumber, emailAddress,
                orderedOrRanked, binary, locationOrPlaceName, coordinate, dateAndTime
+*optional* The fifth column can include a specification for how many decimals you want for each field
+         to have in the pop-up. If your script is having issues, make sure you at least have these 5 headers in the excel document,
+         even if no values appear in the      rows. This can cause the script to fail sometimes.
 
  **portalName** can be left as-is if you are working in ArcGIS Online.
