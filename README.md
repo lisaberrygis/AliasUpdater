@@ -36,7 +36,8 @@ The second column should be the intended alias names for each field.
           to match the backend JSON. 
            Ex:  nameOrTitle, description, typeOrCategory, countOrAmount, percentageOrRatio
                measurement, currency, uniqueIdentifier, phoneNumber, emailAddress,
-               orderedOrRanked, binary, locationOrPlaceName, coordinate, dateAndTime
+               orderedOrRanked, binary, locationOrPlaceName, coordinate, dateAndTime.
+               
 *optional* The fifth column can include a specification for how many decimals you want for each field
          to have in the pop-up. If your script is having issues, make sure you at least have these 5 headers in the excel document,
          even if no values appear in the      rows. This can cause the script to fail sometimes.
