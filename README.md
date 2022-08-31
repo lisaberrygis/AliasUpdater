@@ -29,9 +29,13 @@ See the included **Test.xlsx** to see how the input excel should be structured
               the same field/alias lookup, but only matching fields will be updated.
 
 **lookupTable** must be an excel document (.xlsx) with a header row. An example is included in the repo.
+
 The first column should be the field names as they are in the service.
+
 The second column should be the intended alias names for each field.
+
 *optional* The third column should be the intended description for each field.
+
 *optional* The fourth column can include the field type. This must be formatted
           to match the backend JSON. 
            Ex:  nameOrTitle, description, typeOrCategory, countOrAmount, percentageOrRatio
