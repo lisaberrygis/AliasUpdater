@@ -8,7 +8,7 @@
 #   - The layer's pop-up JSON via fieldInfos
 #   - *If the layer was saved in the new Map Viewer in ArcGIS Online, updates the additional popupElement fieldInfos
 # The pop-up configuration will not be altered with this implementation
-# The script also allows you to update the long description, field type, and pop-up decimals for any field
+# The script also allows you to update the long description, field type, and pop-up decimals/thousand separator for any field
 #
 # The script will use the input excel document and update any fields it finds that matches from the excel document.
 # This script allows for multiple REST layers to be updated. Specify the REST layer count in the inputs.
@@ -39,8 +39,13 @@
 #               orderedOrRanked, binary, locationOrPlaceName, coordinate, dateAndTime
 #   *optional* The fifth column can include a specification for how many decimals you want for each field
 #               to have in the pop-up.
+#   *optional* The sixth column can include a specification for if a numeric attribute should have a thousands comma
+#                separator. Only specify this if it is a numeric field.
+#               Ex: can use "true" or "yes" to specify. You can leave this column blank for any fields that are string
+#                   or don't need a comma. You can also specify those as "no" or "false".
+#
 # If your script is having issues, make sure you at least have these 5 headers in the excel document,
-# even if no values appear in the rows. This can cause the script to fail sometimes.
+# even if no values appear in the rows. This can cause the script to fail sometimes. Also make sure your excel file is empty
 
 # portalName can be left as-is if you are working in ArcGIS Online. Change to your portal URL otherwise.
 
@@ -160,6 +165,11 @@ else:
                             else:
                                 if newItemJSON['layers'][looper]['popupInfo']['fieldInfos'][counter]['format']['places'] == 6:
                                     newItemJSON['layers'][looper]['popupInfo']['fieldInfos'][counter]['format']['places'] = 2
+                        # Update thousands separator if lookup document specifies and if it exists in JSON
+                        if lookup[5] != None and str(lookup[5]).lower() != "no" and str(lookup[5]).lower() != "false" and "format" in i and "digitSeparator" in i["format"]:
+                            newItemJSON['layers'][looper]['popupInfo']['fieldInfos'][counter]['format']['digitSeparator'] = True
+
+
                 counter += 1
 
             # Check if layer was updated in new Map Viewer and contains a popupElement JSON section with fieldInfos
@@ -180,6 +190,9 @@ else:
                                 else:
                                     if newItemJSON['layers'][looper]['popupInfo']['popupElements'][0]["fieldInfos"][counter2]['format']['places'] == 6:
                                         newItemJSON['layers'][looper]['popupInfo']['popupElements'][0]["fieldInfos"][counter2]['format']['places'] = 2
+                            # Update thousands separator if lookup document specifies and if it exists in JSON
+                            if lkup[5] != None and str(lkup[5]).lower() != "no" and str(lkup[5]).lower() != "false" and "format" in j and "digitSeparator" in j["format"]:
+                                newItemJSON['layers'][looper]['popupInfo']['fieldInfos'][counter2]['format']['digitSeparator'] = True
                     counter2 += 1
 
 
