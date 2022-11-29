@@ -7,8 +7,8 @@ The script updates the alias names in two places:
   - *If saved in the new Map Viewer, also edits the popupElement fieldInfos*
 As of August 2022, the script also can update the pop-up decimals based on an additional field in the excel lookup.
   
-The pop-up configuration will not be altered with this implementation.
-The script also allows you to update the long description and field type for any field.
+The pop-up configuration will not be altered with this implementation, just the fields list for the pop-up.
+The script also allows you to update the long description, field decimals, field type, or thousands separator for any field.
 
 The script will use the input excel document and update any fields it finds that matches from the excel document
 
