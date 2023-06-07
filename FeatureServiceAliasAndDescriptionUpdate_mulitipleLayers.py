@@ -28,12 +28,12 @@
 # restLayerCount is the count of layers in the service. All layers will use
 #               the same field/alias lookup, but only matching fields will be updated.
 #
-# lookupTable must be an excel document (.xlsx) with a header row. 
+# lookupTable must be an excel document (.xlsx) with a header row.
 #   The first column should be the field names
 #   The second column should be the intended alias names for each field.
 #   *optional* The third column should be the intended description for each field.
 #   *optional* The fourth column can include the field type. This must be formatted
-#           to match the backend JSON. 
+#           to match the backend JSON.
 #           Ex:  nameOrTitle, description, typeOrCategory, countOrAmount, percentageOrRatio
 #               measurement, currency, uniqueIdentifier, phoneNumber, emailAddress,
 #               orderedOrRanked, binary, locationOrPlaceName, coordinate, dateAndTime
@@ -173,27 +173,31 @@ else:
                 counter += 1
 
             # Check if layer was updated in new Map Viewer and contains a popupElement JSON section with fieldInfos
-            if "popupElements" in itemJSON['layers'][looper]['popupInfo'] and itemJSON['layers'][looper]['popupInfo']["popupElements"] and "fieldInfos" in itemJSON['layers'][looper]['popupInfo']["popupElements"][0]:
-                print("\t\tUpdating popupElement fieldInfo...")
-                counter2 = 0
-                for j in itemJSON['layers'][looper]['popupInfo']["popupElements"][0]["fieldInfos"]:
-                    fldName = j["fieldName"]
-                    for lkup in lookupList:
-                        if lkup[0] == fldName:
-                            newItemJSON['layers'][looper]['popupInfo']['popupElements'][0]["fieldInfos"][counter2]['label'] = lkup[1]
-                            # Check if there is a decimal spec
-                            if "format" in j and "places" in j["format"]:
-                                # If a value is specified in the lookup doc, assign that
-                                if lkup[4] != None:
-                                    newItemJSON['layers'][looper]['popupInfo']['popupElements'][0]["fieldInfos"][counter2]['format']['places'] = lkup[4]
-                                # If a value is not specified and the decimals have defaulted to 6, change to 2
-                                else:
-                                    if newItemJSON['layers'][looper]['popupInfo']['popupElements'][0]["fieldInfos"][counter2]['format']['places'] == 6:
-                                        newItemJSON['layers'][looper]['popupInfo']['popupElements'][0]["fieldInfos"][counter2]['format']['places'] = 2
-                            # Update thousands separator if lookup document specifies and if it exists in JSON
-                            if lkup[5] != None and str(lkup[5]).lower() != "no" and str(lkup[5]).lower() != "false" and "format" in j and "digitSeparator" in j["format"]:
-                                newItemJSON['layers'][looper]['popupInfo']['fieldInfos'][counter2]['format']['digitSeparator'] = True
-                    counter2 += 1
+            if "popupElements" in itemJSON['layers'][looper]['popupInfo'] and itemJSON['layers'][looper]['popupInfo']["popupElements"]:
+                c = 0
+                for i in itemJSON['layers'][looper]['popupInfo']["popupElements"]:
+                    if i['type'] == 'fields':
+                        print("\t\tUpdating popupElement fieldInfo...")
+                        counter2 = 0
+                        for j in itemJSON['layers'][looper]['popupInfo']["popupElements"][c]["fieldInfos"]:
+                            fldName = j["fieldName"]
+                            for lkup in lookupList:
+                                if lkup[0] == fldName:
+                                    newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['label'] = lkup[1]
+                                    # Check if there is a decimal spec
+                                    if "format" in j and "places" in j["format"]:
+                                        # If a value is specified in the lookup doc, assign that
+                                        if lkup[4] != None:
+                                            newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['format']['places'] = lkup[4]
+                                        # If a value is not specified and the decimals have defaulted to 6, change to 2
+                                        else:
+                                            if newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['format']['places'] == 6:
+                                                newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['format']['places'] = 2
+                                    # Update thousands separator if lookup document specifies and if it exists in JSON
+                                    if lkup[5] != None and str(lkup[5]).lower() != "no" and str(lkup[5]).lower() != "false" and "format" in j and "digitSeparator" in j["format"]:
+                                        newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['format']['digitSeparator'] = True
+                            counter2 += 1
+                    c += 1
 
 
             # Update json
