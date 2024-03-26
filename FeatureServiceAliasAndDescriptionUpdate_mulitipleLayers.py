@@ -1,6 +1,7 @@
 # Name: Alias Updater
 # Created by: Lisa Berry, Esri
 # Created: December 2018
+# Updated: August 2023
 #
 # This script uses a lookup table to update alias names on a hosted feature service.
 # The script updates the alias names in two places:
@@ -19,14 +20,14 @@
 # Updated: July 2022 - Converted XLRD to OPENPYXL to read in excel file. XLRD no longer supports .xlsx files.
 # Updated: August 2022 - can also update decimals for popup JSON.
 #          Also updates popupElement in JSON if saved in new Map Viewer
+# Updated: August 2023 - no longer need to input layer count, which is determined automatically. Also, blank values
+#            in the excel doc are now handled by checking if they exist first, fixing NoneType error
 
 # Comments about inputs:_________________________________________________________________________________________
 # username and password are your ArcGIS Online or ArcGIS Enterprise credentials
 #
-# layerID is the ID to a hosted feature service. You must own the service to run this script.
-#
-# restLayerCount is the count of layers in the service. All layers will use
-#               the same field/alias lookup, but only matching fields will be updated.
+# layerID is the ID to a hosted feature service.
+# *** You must own the service to run this script.
 #
 # lookupTable must be an excel document (.xlsx) with a header row.
 #   The first column should be the field names
@@ -45,7 +46,7 @@
 #                   or don't need a comma. You can also specify those as "no" or "false".
 #
 # If your script is having issues, make sure you at least have these 5 headers in the excel document,
-# even if no values appear in the rows. This can cause the script to fail sometimes. Also make sure your excel file is empty
+# even if no values appear in the rows. This can cause the script to fail sometimes. Also make sure your excel file is closed.
 
 # portalName can be left as-is if you are working in ArcGIS Online. Change to your portal URL otherwise.
 
@@ -53,8 +54,7 @@
 username = "username"
 password = "password"
 layerID = "itemID"
-restLayerCount = 1
-lookupTable = r"C:\pathName\ExcelDocName.xlsx"
+lookupTable = r"C:\path\exceldocname.xlsx"
 portalName = "https://www.arcgis.com"
 
 # MAIN SCRIPT___________________________________________________________________________________________________
@@ -68,6 +68,10 @@ import copy
 
 # Login to your arcgis account
 login = gis.GIS(portalName, username, password)
+
+# Get layer count from service
+updateItem = gis.Item(login, itemid=layerID)
+restLayerCount = len(updateItem.layers)
 
 # format the path to the excel document so it is recognized as a path
 lookupTable = os.path.normpath(lookupTable)
@@ -116,16 +120,32 @@ else:
                     # store the field JSON from the online layer
                     fieldJSON = dict(deepcopy(field))
                     # assign the new alias name in JSON format
-                    fieldJSON['alias'] = lookupField[1]
-                    # assign the new field description in JSON format
-                    longDesc = lookupField[2]
-                    fldType = lookupField[3]
-                    # Remove escape characters like double quotes, newlines, or encoding issues
-                    longDesc = longDesc.replace('"', '\\\"').replace("\n", " ").replace("\t", " ").replace(u'\xa0', u' ')
+                    if lookupField[1]:
+                        alias = lookupField[1]
+                        fieldJSON['alias'] = alias
+                    else:
+                        alias = ""
+                    # Assign field type, if specified
+                    if lookupField[3]:
+                        fldType = lookupField[3]
+                    else:
+                        fldType = ""
+                    # assign the new field description in JSON format, if specified
+                    if lookupField[2]:
+                        longDesc = lookupField[2]
+                        # Remove escape characters like double quotes, newlines, or encoding issues
+                        longDesc = longDesc.replace('"', '\\\"').replace("\n", " ").replace("\t", " ").replace(u'\xa0', u' ')
+                    else:
+                        longDesc = ""
                     # Build the JSON structure with the proper backslashes and quotes
                     fieldJSON['description'] = "{\"value\":" + "\"" + longDesc + "\"" + ",\"fieldValueType\":\"" + fldType + "\"}"
                     fieldJSON.pop('sqlType')
-                    print("\t\tField '" + fieldName + "' will be updated to get the alias name '" + lookupField[1] + "'")
+                    if alias != "":
+                        print("\t\tField '" + fieldName + "' will be updated to get the alias name '" + alias + "'")
+                    if longDesc != "":
+                        print("\t\t\t\tThe long description for this field was also updated")
+                    if fldType != "":
+                        print("\t\t\t\tThe field type for this field was also updated to: " + fldType)
                     # Create a python list containing any fields to update
                     updateJSON.append(fieldJSON)
 
@@ -151,11 +171,12 @@ else:
             print("\tFinding all replacements of alias names within pop-up...")
             newItemJSON = copy.deepcopy(itemJSON)
             print("\t\tUpdating alias names in popup fieldInfos...")
-            for i in itemJSON['layers'][looper]['popupInfo']['fieldInfos']: #change [0] to whatever layer you're working on (1,2,3)
+            for i in itemJSON['layers'][looper]['popupInfo']['fieldInfos']:
                 fieldName2 = i['fieldName']
                 for lookup in lookupList:
                     if lookup[0] == fieldName2:
-                        newItemJSON['layers'][looper]['popupInfo']['fieldInfos'][counter]['label'] = lookup[1] #change [0] to whatever layer you're working on (1,2,3)
+                        if lookup[1]:
+                            newItemJSON['layers'][looper]['popupInfo']['fieldInfos'][counter]['label'] = lookup[1]
                         # Check if there is a decimal spec
                         if "format" in i and "places" in i["format"]:
                             # If a value is specified in the lookup doc, assign that
@@ -179,24 +200,26 @@ else:
                     if i['type'] == 'fields':
                         print("\t\tUpdating popupElement fieldInfo...")
                         counter2 = 0
-                        for j in itemJSON['layers'][looper]['popupInfo']["popupElements"][c]["fieldInfos"]:
-                            fldName = j["fieldName"]
-                            for lkup in lookupList:
-                                if lkup[0] == fldName:
-                                    newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['label'] = lkup[1]
-                                    # Check if there is a decimal spec
-                                    if "format" in j and "places" in j["format"]:
-                                        # If a value is specified in the lookup doc, assign that
-                                        if lkup[4] != None:
-                                            newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['format']['places'] = lkup[4]
-                                        # If a value is not specified and the decimals have defaulted to 6, change to 2
-                                        else:
-                                            if newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['format']['places'] == 6:
-                                                newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['format']['places'] = 2
-                                    # Update thousands separator if lookup document specifies and if it exists in JSON
-                                    if lkup[5] != None and str(lkup[5]).lower() != "no" and str(lkup[5]).lower() != "false" and "format" in j and "digitSeparator" in j["format"]:
-                                        newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['format']['digitSeparator'] = True
-                            counter2 += 1
+                        if "fieldInfos" in itemJSON['layers'][looper]['popupInfo']["popupElements"][c]:
+                            for j in itemJSON['layers'][looper]['popupInfo']["popupElements"][c]["fieldInfos"]:
+                                fldName = j["fieldName"]
+                                for lkup in lookupList:
+                                    if lkup[0] == fldName:
+                                        if lkup[1] != None:
+                                            newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['label'] = lkup[1]
+                                        # Check if there is a decimal spec
+                                        if "format" in j and "places" in j["format"]:
+                                            # If a value is specified in the lookup doc, assign that
+                                            if lkup[4] != None:
+                                                newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['format']['places'] = lkup[4]
+                                            # If a value is not specified and the decimals have defaulted to 6, change to 2
+                                            else:
+                                                if newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['format']['places'] == 6:
+                                                    newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['format']['places'] = 2
+                                        # Update thousands separator if lookup document specifies and if it exists in JSON
+                                        if lkup[5] != None and str(lkup[5]).lower() != "no" and str(lkup[5]).lower() != "false" and "format" in j and "digitSeparator" in j["format"]:
+                                            newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['format']['digitSeparator'] = True
+                                counter2 += 1
                     c += 1
 
 
