@@ -1,7 +1,7 @@
 # Name: Alias Updater
 # Created by: Lisa Berry, Esri
 # Created: December 2018
-# Updated: August 2023
+# Updated: June 2024
 #
 # This script uses a lookup table to update alias names on a hosted feature service.
 # The script updates the alias names in two places:
@@ -22,6 +22,8 @@
 #          Also updates popupElement in JSON if saved in new Map Viewer
 # Updated: August 2023 - no longer need to input layer count, which is determined automatically. Also, blank values
 #            in the excel doc are now handled by checking if they exist first, fixing NoneType error
+# NOTE: As of 6/24, the script will alert you if you try to pass a long description with a < or > character. This will
+#           not run as expected since the REST API cannot pass the characters to the service.
 
 # Comments about inputs:_________________________________________________________________________________________
 # username and password are your ArcGIS Online or ArcGIS Enterprise credentials
@@ -134,7 +136,10 @@ else:
                     if lookupField[2]:
                         longDesc = lookupField[2]
                         # Remove escape characters like double quotes, newlines, or encoding issues
-                        longDesc = longDesc.replace('"', '\\\"').replace("\n", " ").replace("\t", " ").replace(u'\xa0', u' ')
+                        if "<" or ">" in longDesc:
+                            print("Special character > or < found in field: " + fieldName)
+                            print("Script will not run as expected. Please remove all hyperlinks or > < characters from your long description and rerun the script.")
+                        longDesc = longDesc.replace('"', '\\\"').replace("\n", " ").replace("\t", " ").replace(u'\xa0', u' ').replace(">=", " greater than or equal to ").replace("<=", " less than or equal to ").replace(">", " greater than ").replace("<", " less than ")
                     else:
                         longDesc = ""
                     # Build the JSON structure with the proper backslashes and quotes
