@@ -180,12 +180,12 @@ else:
                 fieldName2 = i['fieldName']
                 for lookup in lookupList:
                     if lookup[0] == fieldName2:
-                        if lookup[1]:
+                        if lookup[1] != None:
                             newItemJSON['layers'][looper]['popupInfo']['fieldInfos'][counter]['label'] = lookup[1]
                         # Check if there is a decimal spec
                         if "format" in i and "places" in i["format"]:
                             # If a value is specified in the lookup doc, assign that
-                            if lookup[4]:
+                            if lookup[4] != None:
                                 newItemJSON['layers'][looper]['popupInfo']['fieldInfos'][counter]['format']['places'] = lookup[4]
                             # If a value is not specified and the decimals have defaulted to 6, change to 2
                             else:
