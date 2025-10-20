@@ -185,7 +185,7 @@ else:
                         # Check if there is a decimal spec
                         if "format" in i and "places" in i["format"]:
                             # If a value is specified in the lookup doc, assign that
-                            if lookup[4] != None:
+                            if lookup[4] != None and isinstance(lookup[4], int):
                                 newItemJSON['layers'][looper]['popupInfo']['fieldInfos'][counter]['format']['places'] = lookup[4]
                             # If a value is not specified and the decimals have defaulted to 6, change to 2
                             else:
@@ -215,7 +215,7 @@ else:
                                         # Check if there is a decimal spec
                                         if "format" in j and "places" in j["format"]:
                                             # If a value is specified in the lookup doc, assign that
-                                            if lkup[4] != None:
+                                            if lkup[4] != None and isinstance(lkup[4], int):
                                                 newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['format']['places'] = lkup[4]
                                             # If a value is not specified and the decimals have defaulted to 6, change to 2
                                             else:
@@ -241,3 +241,4 @@ else:
 
         looper += 1
         restLayerCount -= 1
+
