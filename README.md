@@ -40,7 +40,8 @@ The second column should be the intended alias names for each field.
           to match the backend JSON. 
            Ex:  nameOrTitle, description, typeOrCategory, countOrAmount, percentageOrRatio
                measurement, currency, uniqueIdentifier, phoneNumber, emailAddress,
-               orderedOrRanked, binary, locationOrPlaceName, coordinate, dateAndTime.
+               orderedOrRanked, binary, locationOrPlaceName, coordinate, dateAndTime, url.
+               To see list in doc: https://doc.arcgis.com/en/arcgis-online/manage-data/describe-fields.htm#ESRI_SECTION1_F8857702BB7045B081D0C63E5879C882
                
 *optional* The fifth column can include a specification for how many decimals you want for each field
          to have in the pop-up. If your script is having issues, make sure you at least have these 5 headers in the excel document,
