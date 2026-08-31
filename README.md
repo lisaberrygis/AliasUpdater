@@ -18,7 +18,7 @@ You must have ArcGIS Pro installed on your computer in order to run this script
 Python version: 3.6. Make sure your interpreter is calling to the arcgispro-py3 python.exe
 
 # Excel input:
-See the included **Test.xlsx** to see how the input excel should be structured
+See the included **Test.xlsx** to see how the input excel should be structured. Headers must be included.
 
 # Comments about python inputs:
 **username and password** are your ArcGIS Online organizational credentials
@@ -28,7 +28,7 @@ See the included **Test.xlsx** to see how the input excel should be structured
 **restLayerCount** is the count of layers in the service. All layers will use
               the same field/alias lookup, but only matching fields will be updated.
 
-**lookupTable** must be an excel document (.xlsx) with a header row. An example is included in the repo.
+**lookupTable** must be an excel document (.xlsx) with a header row. An example is included in the repo. Must use all headers even if you don't add any values. 
 
 The first column should be the field names as they are in the service.
 
