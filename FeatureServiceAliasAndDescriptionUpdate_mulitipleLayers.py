@@ -1,12 +1,13 @@
 # Name: Alias Updater
 # Created by: Lisa Berry, Esri
 # Created: December 2018
-# Updated: June 2024
+# Updated: March 2026
+# Python version: 3.13 - Make sure your interpreter is calling to the arcgispro-py3 python.exe
 #
 # This script uses a lookup table to update alias names on a hosted feature service.
 # The script updates the alias names in two places:
 #   - The REST endpoint
-#   - The layer's pop-up JSON via fieldInfos
+#   - The layer's pop-up JSON via fieldInfos (deprecated 2025) and fieldConfiguration (as of 2025)
 #   - *If the layer was saved in the new Map Viewer in ArcGIS Online, updates the additional popupElement fieldInfos
 # The pop-up configuration will not be altered with this implementation
 # The script also allows you to update the long description, field type, and pop-up decimals/thousand separator for any field
@@ -15,21 +16,26 @@
 # This script allows for multiple REST layers to be updated. Specify the REST layer count in the inputs.
 # You must have ArcGIS Pro installed on your computer in order to run this script.
 #
-# Python version: 3.7 - Make sure your interpreter is calling to the arcgispro-py3 python.exe
 # Updated: April 2020 - all http calls removed and replaced with python API calls
 # Updated: July 2022 - Converted XLRD to OPENPYXL to read in excel file. XLRD no longer supports .xlsx files.
 # Updated: August 2022 - can also update decimals for popup JSON.
 #          Also updates popupElement in JSON if saved in new Map Viewer
 # Updated: August 2023 - no longer need to input layer count, which is determined automatically. Also, blank values
 #            in the excel doc are now handled by checking if they exist first, fixing NoneType error
-# NOTE: As of 6/24, the script will alert you if you try to pass a long description with a < or > character. This will
+# Updated: June 2024 - the script will alert you if you try to pass a long description with a < or > character. This will
 #           not run as expected since the REST API cannot pass the characters to the service.
+# Merged: October 2025 - Esri Netherlands submitted a fix for "places" when the excel document had no value but was passing an empty string
+# Updated: September 2026 - The newest field configuration JSON spec has been applied to handle popups designed since June 2025: 
+#           doc for new formatting: https://developers.arcgis.com/web-map-specification/objects/fieldConfiguration/
+#           Logic for this new format uses existing inputs, and translates them into the maxFractionDigits by default. 
+#           If a value also appears for minimumFractionDigits, the max value will be applied to both max and min.
 
 # Comments about inputs:_________________________________________________________________________________________
 # username and password are your ArcGIS Online or ArcGIS Enterprise credentials
 #
 # layerID is the ID to a hosted feature service.
 # *** You must own the service to run this script.
+# *** Does not currently work on services with table layers
 #
 # lookupTable must be an excel document (.xlsx) with a header row.
 #   The first column should be the field names
@@ -49,14 +55,14 @@
 #
 # If your script is having issues, make sure you at least have these 5 headers in the excel document,
 # even if no values appear in the rows. This can cause the script to fail sometimes. Also make sure your excel file is closed.
-
+#
 # portalName can be left as-is if you are working in ArcGIS Online. Change to your portal URL otherwise.
 
 # Inputs:_______________________________________________________________________________________________________
 username = "username"
 password = "password"
-layerID = "itemID"
-lookupTable = r"C:\path\exceldocname.xlsx"
+layerID = "layerID"
+lookupTable = r"C:\path\excelFileName.xlsx"
 portalName = "https://www.arcgis.com"
 
 # MAIN SCRIPT___________________________________________________________________________________________________
@@ -74,6 +80,8 @@ login = gis.GIS(portalName, username, password)
 # Get layer count from service
 updateItem = gis.Item(login, itemid=layerID)
 restLayerCount = len(updateItem.layers)
+#restTableCount = len(updateItem.tables)
+allLayersAndTables =  [*updateItem.layers, *updateItem.tables]
 
 # format the path to the excel document so it is recognized as a path
 lookupTable = os.path.normpath(lookupTable)
@@ -179,7 +187,7 @@ else:
             for i in itemJSON['layers'][looper]['popupInfo']['fieldInfos']:
                 fieldName2 = i['fieldName']
                 for lookup in lookupList:
-                    if lookup[0] == fieldName2:
+                    if lookup[0].lower() == fieldName2.lower():
                         if lookup[1] != None:
                             newItemJSON['layers'][looper]['popupInfo']['fieldInfos'][counter]['label'] = lookup[1]
                         # Check if there is a decimal spec
@@ -209,7 +217,9 @@ else:
                             for j in itemJSON['layers'][looper]['popupInfo']["popupElements"][c]["fieldInfos"]:
                                 fldName = j["fieldName"]
                                 for lkup in lookupList:
-                                    if lkup[0] == fldName:
+                                    # Find matching field
+                                    if lkup[0].lower() == fldName.lower():
+                                        # Update alias name
                                         if lkup[1] != None:
                                             newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['label'] = lkup[1]
                                         # Check if there is a decimal spec
@@ -224,9 +234,49 @@ else:
                                         # Update thousands separator if lookup document specifies and if it exists in JSON
                                         if lkup[5] != None and str(lkup[5]).lower() != "no" and str(lkup[5]).lower() != "false" and "format" in j and "digitSeparator" in j["format"]:
                                             newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['format']['digitSeparator'] = True
+                                        
+                                        # NEW 2025 - fieldFormat is replacing format, so if the layer has been saved since the update, 
+                                        # the script will instead update the new fieldFormat (only for numeric fields)
+                                        if "fieldFormat" in j:
+                                            # NUMERIC FIELDS 
+                                            print("\t\t\tLayer uses fieldFormat new spec and will update for field " +  lkup[0])
+                                            if "type" in j["fieldFormat"] and j["fieldFormat"]["type"] == "number":
+                                                # update decimals
+                                                if lkup[4] != None and isinstance(lkup[4], int) and "maximumFractionDigits" in j["fieldFormat"]:
+                                                    newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['fieldFormat']["maximumFractionDigits"] = lkup[4]
+                                                    if "minimumFractionDigits" in j["fieldFormat"]:
+                                                        newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['fieldFormat']["minimumFractionDigits"] = lkup[4]
+                                                # update thousands separators
+                                                if lkup[5] != None and str(lkup[5]).lower() != "no" and str(lkup[5]).lower() != "false" and "useGrouping" in j["fieldFormat"]:
+                                                    newItemJSON['layers'][looper]['popupInfo']['popupElements'][c]["fieldInfos"][counter2]['fieldFormat']["useGrouping"] = "always"
+                                            ### DATES NOT HANDLED
+                                                
+                                                
+
                                 counter2 += 1
                     c += 1
 
+            # NEW - handling new JSON spec for fieldConfigurations    
+            if "fieldConfigurations" in itemJSON['layers'][looper]['layerDefinition']:
+                c2 = 0
+                print("\t\t Updating Field Configurations within layerDefinition... (newer JSON spec as of 2025)")
+                for m in itemJSON['layers'][looper]['layerDefinition']["fieldConfigurations"]:
+                    fldName = m["name"]
+                    for lkup in lookupList:
+                        # Find matching field
+                        if lkup[0].lower() == fldName.lower():
+                            # update alias
+                            if lkup[1] != None:
+                                newItemJSON['layers'][looper]['layerDefinition']['fieldConfigurations'][c2]['alias'] = lkup[1]
+                            # update decimals
+                            if lkup[4] != None and isinstance(lkup[4], int) and "maximumFractionDigits" in m["fieldFormat"]:
+                                newItemJSON['layers'][looper]['layerDefinition']['fieldConfigurations'][c2]['fieldFormat']['maximumFractionDigits'] = lkup[4]
+                                if "minimumFractionDigits" in m['fieldFormat']:
+                                    newItemJSON['layers'][looper]['layerDefinition']['fieldConfigurations'][c2]['fieldFormat']['minimumFractionDigits'] = lkup[4]
+                            # update thousands separators 
+                            if lkup[5] != None and str(lkup[5]).lower() != "no" and str(lkup[5]).lower() != "false" and "useGrouping" in m["fieldFormat"]:
+                               newItemJSON['layers'][looper]['layerDefinition']['fieldConfigurations'][c2]['fieldFormat']['useGrouping'] = "always"
+                    c2 += 1
 
             # Update json
             print("\tUpdating the alias names within the existing item pop-up...")
